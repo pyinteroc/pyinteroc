@@ -28,6 +28,14 @@
           fi
 
           '';
+
+        test_loop = pkgs.writeShellScriptBin "testloop" ''
+          echo "test loop initiated"
+        '';
+        
+        build_script = pkgs.writeShellScriptBin "build" ''
+          roc build --lib
+        '';
         
         # Define packages as an attribute set
         packageSet = with pkgs; {
@@ -41,6 +49,10 @@
           ### add roc command
           roc = rocPkgs.cli;
           
+          ### add scripts
+          inherit test_loop;
+          inherit build_script;
+          
         };
 
       in rec {
@@ -49,6 +61,11 @@
             entr
             curl
             deployRocNightly
+            
+            ### add scripts
+            test_loop
+            build_script
+            
           ];
 
         };
