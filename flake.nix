@@ -30,7 +30,25 @@
           '';
 
         test_loop = pkgs.writeShellScriptBin "testloop" ''
-          echo "test loop initiated"
+          case "$1" in
+            roc)
+              echo "Running ROC tests"
+              roc test
+              ;;
+            zig)
+              echo "Running Zig tests"
+              zig test
+              ;;
+            py)
+              echo "Running Python tests"
+              pytest
+              ;;
+            *)
+              echo "Unsupported test type: $1"
+              echo "Supported types are: roc, zig, py"
+              exit 1
+              ;;
+          esac
         '';
         
         build_script = pkgs.writeShellScriptBin "build" ''
