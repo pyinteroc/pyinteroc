@@ -30,18 +30,22 @@
           '';
 
         test_loop = pkgs.writeShellScriptBin "testloop" ''
+          watch_files() {
+            find . -type f -name "*.$1" | entr -r $2
+          }
+
           case "$1" in
             roc)
               echo "Running ROC tests"
-              roc test
+              watch_files "roc" "roc test"
               ;;
             zig)
               echo "Running Zig tests"
-              zig test
+              watch_files "zig" "zig test"
               ;;
             py)
               echo "Running Python tests"
-              pytest
+              watch_files "py" "pytest"
               ;;
             *)
               echo "Unsupported test type: $1"
