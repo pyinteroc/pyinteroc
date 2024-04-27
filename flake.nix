@@ -30,29 +30,30 @@
           '';
 
         test_loop = pkgs.writeShellScriptBin "testloop" ''
-          watch_files() {
-            find . -type f -name "*.$1" | entr -r $2
+          watch() {
+            echo $1 | entr -r sh -c "$2 $1"
           }
 
           case "$1" in
-            roc)
+            *".roc"*)
               echo "Running ROC tests"
-              watch_files "roc" "roc test"
+              watch "$1" "roc test"
               ;;
-            zig)
+            *".zig"*)
               echo "Running Zig tests"
-              watch_files "zig" "zig test"
+              watch "$1" "zig test"
               ;;
-            py)
+            *".py"*)
               echo "Running Python tests"
-              watch_files "py" "pytest"
+              watch "$1" "pytest"
               ;;
             *)
-              echo "Unsupported test type: $1"
+              echo "Unsupported file type: $1"
               echo "Supported types are: roc, zig, py"
               exit 1
               ;;
           esac
+
         '';
         
         build_script = pkgs.writeShellScriptBin "build" ''
