@@ -75,11 +75,22 @@
           inherit test_loop;
           inherit build_script;
           
+          ### add python
+          inherit python312;
+          inherit poetry;
+          pytest = python312Packages.pytest;
+          
         };
 
       in rec {
         defaultShell = pkgs.mkShell {
           buildInputs = with packageSet; [
+            ### add python
+            python312
+            poetry
+            pytest
+
+            ### utilities
             entr
             curl
             deployRocNightly
