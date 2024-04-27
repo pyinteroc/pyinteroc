@@ -166,3 +166,4 @@ result
 result-*
 
 .envrc
+.direnv/
