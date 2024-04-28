@@ -170,3 +170,5 @@ result-*
 main
 main.ll
 zig-cache/
+crates/
+roc
