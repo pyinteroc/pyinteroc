@@ -65,10 +65,6 @@
           inherit entr;
           inherit zig;
 
-          ### add deployRocNightly script and utilities
-          inherit deployRocNightly;
-          inherit curl;
-          
           ### add roc command
           roc = rocPkgs.cli;
           
@@ -80,6 +76,11 @@
           inherit python312;
           inherit poetry;
           pytest = python312Packages.pytest;
+          
+          
+          ### add deployRocNightly script and utilities
+          inherit deployRocNightly;
+          inherit curl;
           
         };
 

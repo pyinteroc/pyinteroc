@@ -172,3 +172,4 @@ main.ll
 zig-cache/
 crates/
 roc
+zig-out/
