@@ -172,7 +172,7 @@ fn call_the_closure(closure_data_pointer: [*]u8) void {
 }
 
 
-// ///// Effects start here
+//////// Effects start here
 
 fn RocResultUnion(comptime T:type, comptime E:type) type {
     return extern struct {
@@ -261,7 +261,6 @@ pub export fn roc_fx_stdoutLine(rocPath: *RocStr) RocRes_Void_Str {
 
 fn roc_fx_stdoutLine_help(rocPath: *RocStr) !RocRes_Void_Str {
     const stdout = std.io.getStdOut().writer();
-    _ = stdout.write("testing\n") catch unreachable;
     const slice = rocPath.asSlice();
     stdout.print("{s}", .{slice}) catch unreachable;
     
