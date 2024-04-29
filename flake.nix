@@ -57,7 +57,9 @@
         '';
         
         build_script = pkgs.writeShellScriptBin "build" ''
-          roc build --lib
+          ./roc build --lib
+          mv main.so lib/libRoc.so
+          zig build
         '';
         
         # Define packages as an attribute set
