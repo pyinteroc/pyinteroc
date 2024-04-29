@@ -1,7 +1,6 @@
 const std = @import("std");
 const builtin = @import("builtin");
 const str = @import("glue").str;
-// const str = @import("str.zig");
 const RocStr = str.RocStr;
 const testing = std.testing;
 const expectEqual = testing.expectEqual;
@@ -11,11 +10,11 @@ const maxInt = std.math.maxInt;
 const mem = std.mem;
 const Allocator = mem.Allocator;
 
-extern fn roc__mainForHost_1_exposed_generic(*RocStr) callconv(.C) void;
-extern fn roc__mainForHost_1_exposed_size() callconv(.C) i64;
-extern fn roc__mainForHost_0_caller(*const u8, *RocStr, [*]u8) callconv(.C) void;
-extern fn roc__mainForHost_0_size() callconv(.C) i64;
-extern fn roc__mainForHost_0_result_size() callconv(.C) i64;
+extern fn roc__mainForHost_1_exposed_generic([*]u8) void;
+extern fn roc__mainForHost_1_exposed_size() i64;
+extern fn roc__mainForHost_0_caller(*const u8, [*]u8, [*]u8) void;
+extern fn roc__mainForHost_0_size() i64;
+extern fn roc__mainForHost_0_result_size() i64;
 
 const Align = 2 * @alignOf(usize);
 extern fn malloc(size: usize) callconv(.C) ?*align(Align) anyopaque;
@@ -98,9 +97,6 @@ fn roc_mmap(addr: ?*anyopaque, length: c_uint, prot: c_int, flags: c_int, fd: c_
 }
 
 comptime {
-    
-    // @export(roc_fx_putLine, .{ .name = "roc_fx_stdoutLine" });
-
     if (builtin.os.tag == .macos or builtin.os.tag == .linux) {
         @export(roc_getppid, .{ .name = "roc_getppid", .linkage = .Strong });
         @export(roc_mmap, .{ .name = "roc_mmap", .linkage = .Strong });
@@ -114,34 +110,31 @@ comptime {
 
 const Unit = extern struct {};
 
-pub fn main() u8 {
-    // const allocator = std.heap.page_allocator;
-    // const stderr = std.io.getStdErr().writer();
+pub export fn main() u8 {
+    const allocator = std.heap.page_allocator;
 
     // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes
-    // const size = @max(8, @as(usize, @intCast(roc__mainForHost_1_exposed_size())));
-    // const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
-    // var output = @as([*]u8, @ptrCast(raw_output));
+    const size = @max(8, @as(usize, @intCast(roc__mainForHost_1_exposed_size())));
+    const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
+    var output = @as([*]u8, @ptrCast(raw_output));
 
-    var output = RocStr.empty();
     defer {
-        // allocator.free(raw_output);
-        output.decref();
+        allocator.free(raw_output);
     }
 
-    // var timer = std.time.Timer.start() catch unreachable;
+    var timer = std.time.Timer.start() catch unreachable;
 
-    roc__mainForHost_1_exposed_generic(&output);
+    roc__mainForHost_1_exposed_generic(output);
 
-    call_the_closure(&output);
-    
-    // output.decref();
+    call_the_closure(output);
 
-    // const nanos = timer.read();
-    // const seconds = (@as(f64, @floatFromInt(nanos)) / 1_000_000_000.0);
+    const nanos = timer.read();
+    const seconds = (@as(f64, @floatFromInt(nanos)) / 1_000_000_000.0);
 
-    // stderr.print("runtime: {d:.3}ms\n", .{seconds * 1000}) catch unreachable;
-
+    if (DEBUG) {
+        const stderr = std.io.getStdErr().writer();
+        stderr.print("runtime: {d:.3}ms\n", .{seconds * 1000}) catch unreachable;
+    }
     return 0;
 }
 
@@ -149,8 +142,7 @@ fn to_seconds(tms: std.os.timespec) f64 {
     return @as(f64, @floatFromInt(tms.tv_sec)) + (@as(f64, @floatFromInt(tms.tv_nsec)) / 1_000_000_000.0);
 }
 
-// fn call_the_closure(closure_data_pointer: [*]u8) void {
-fn call_the_closure(closure_data_pointer: *RocStr) void {
+fn call_the_closure(closure_data_pointer: [*]u8) void {
     const allocator = std.heap.page_allocator;
 
     const size = roc__mainForHost_0_result_size();
@@ -180,6 +172,27 @@ fn call_the_closure(closure_data_pointer: *RocStr) void {
 }
 
 
+// ///// Effects start here
+
+fn RocResultUnion(comptime T:type, comptime E:type) type {
+    return extern struct {
+        payload: extern union {ok: T, err: E},
+        tag: u8,
+        pub const len = @sizeOf(@This());
+    };
+}
+
+fn RocResult_EmptyErr(comptime T:type) type {
+    return RocResultUnion(T, void);
+}
+
+fn RocResult_EmptyPayload(comptime E:type) type {
+    return RocResultUnion(void, E);
+}
+
+const RocRes_Void_Str = RocResult_EmptyPayload(RocStr);
+
+
 pub export fn roc_fx_getLine() str.RocStr {
     return roc_fx_getLine_help() catch return str.RocStr.empty();
 }
@@ -193,17 +206,16 @@ fn roc_fx_getLine_help() !RocStr {
     return str.RocStr.init(@as([*]const u8, @ptrCast(line)), line.len);
 }
 
-pub export fn roc_fx_stdoutLine(rocPath: *RocStr) void {
-    return roc_fx_stdoutLine_help(rocPath) catch unreachable;
-}
-
-fn roc_fx_stdoutLine_help(rocPath: *RocStr) !void {
+pub export fn roc_fx_putLine(rocPath: *str.RocStr) i64 {
     const stdout = std.io.getStdOut().writer();
-    _ = stdout.write("testing\n") catch unreachable;
-    // _ = rocPath.asSlice();
-    stdout.print("{s}", .{rocPath.asSlice()}) catch unreachable;
-    // _ = stdout.write("\n") catch unreachable;
-    // return 0;
+
+    for (rocPath.asSlice()) |char| {
+        stdout.print("{c}", .{char}) catch unreachable;
+    }
+
+    stdout.print("\n", .{}) catch unreachable;
+
+    return 0;
 }
 
 const GetInt = extern struct {
@@ -237,4 +249,24 @@ fn roc_fx_getInt_help() !i64 {
     const line = std.mem.trimRight(u8, raw_line, &std.ascii.whitespace);
 
     return std.fmt.parseInt(i64, line, 10);
+}
+
+pub export fn roc_fx_stdoutLine(rocPath: *RocStr) RocRes_Void_Str {
+    const errMsgIfAny = "ERROR";
+    return roc_fx_stdoutLine_help(rocPath) catch return .{
+        .payload = .{ .err = RocStr.init(errMsgIfAny, errMsgIfAny.len) },
+        .tag = 0
+    };
+}
+
+fn roc_fx_stdoutLine_help(rocPath: *RocStr) !RocRes_Void_Str {
+    const stdout = std.io.getStdOut().writer();
+    _ = stdout.write("testing\n") catch unreachable;
+    const slice = rocPath.asSlice();
+    stdout.print("{s}", .{slice}) catch unreachable;
+    
+    return .{
+        .payload = .{ .err = RocStr.init("", 0) },
+        .tag = 1
+    };
 }

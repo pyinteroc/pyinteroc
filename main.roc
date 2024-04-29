@@ -4,8 +4,5 @@ app "pyinteroc"
     provides [main] to pf
 
 main = 
-    Effect.after (Effect.stdoutLine "Starting the project!!") 
+    Effect.after (Effect.stdoutLine "Starting the project!!\n") 
         \_ -> Effect.always {}
-    # |> Effect.map \res -> when res is
-    #     Ok {} -> {}
-    #     _ -> {}
