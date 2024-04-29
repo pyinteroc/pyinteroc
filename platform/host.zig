@@ -1,17 +1,32 @@
 const std = @import("std");
 const builtin = @import("builtin");
-const str = @import("vendored/str.zig");
+const str = @import("glue").str;
+// const str = @import("str.zig");
 const RocStr = str.RocStr;
 const testing = std.testing;
 const expectEqual = testing.expectEqual;
 const expect = testing.expect;
+const maxInt = std.math.maxInt;
+
+const mem = std.mem;
+const Allocator = mem.Allocator;
+
+extern fn roc__mainForHost_1_exposed_generic(*RocStr) callconv(.C) void;
+extern fn roc__mainForHost_1_exposed_size() callconv(.C) i64;
+extern fn roc__mainForHost_0_caller(*const u8, *RocStr, [*]u8) callconv(.C) void;
+extern fn roc__mainForHost_0_size() callconv(.C) i64;
+extern fn roc__mainForHost_0_result_size() callconv(.C) i64;
 
 const Align = 2 * @alignOf(usize);
 extern fn malloc(size: usize) callconv(.C) ?*align(Align) anyopaque;
 extern fn realloc(c_ptr: [*]align(Align) u8, size: usize) callconv(.C) ?*anyopaque;
 extern fn free(c_ptr: [*]align(Align) u8) callconv(.C) void;
 extern fn memcpy(dst: [*]u8, src: [*]u8, size: usize) callconv(.C) void;
-extern fn memset(dst: [*]u8, value: i32, size: usize) callconv(.C) void;
+extern fn memset(dst: [*]u8, value: i32, size: usize) void;
+extern fn kill(pid: c_int, sig: c_int) c_int;
+extern fn shm_open(name: *const i8, oflag: c_int, mode: c_uint) c_int;
+extern fn mmap(addr: ?*anyopaque, length: c_uint, prot: c_int, flags: c_int, fd: c_int, offset: c_uint) *anyopaque;
+extern fn getppid() c_int;
 
 const DEBUG: bool = false;
 
@@ -67,11 +82,6 @@ export fn roc_memset(dst: [*]u8, value: i32, size: usize) callconv(.C) void {
     return memset(dst, value, size);
 }
 
-extern fn kill(pid: c_int, sig: c_int) c_int;
-extern fn shm_open(name: *const i8, oflag: c_int, mode: c_uint) c_int;
-extern fn mmap(addr: ?*anyopaque, length: c_uint, prot: c_int, flags: c_int, fd: c_int, offset: c_uint) *anyopaque;
-extern fn getppid() c_int;
-
 fn roc_getppid() callconv(.C) c_int {
     return getppid();
 }
@@ -88,6 +98,9 @@ fn roc_mmap(addr: ?*anyopaque, length: c_uint, prot: c_int, flags: c_int, fd: c_
 }
 
 comptime {
+    
+    // @export(roc_fx_putLine, .{ .name = "roc_fx_stdoutLine" });
+
     if (builtin.os.tag == .macos or builtin.os.tag == .linux) {
         @export(roc_getppid, .{ .name = "roc_getppid", .linkage = .Strong });
         @export(roc_mmap, .{ .name = "roc_mmap", .linkage = .Strong });
@@ -99,47 +112,129 @@ comptime {
     }
 }
 
-const mem = std.mem;
-const Allocator = mem.Allocator;
-
 const Unit = extern struct {};
 
-extern fn roc__mainForHost_1_exposed_generic(*RocStr) callconv(.C) void;
-extern fn roc__mainForHost_0_caller(*anyopaque, *anyopaque, *RocStr) callconv(.C) void;
-
-
 pub fn main() u8 {
+    // const allocator = std.heap.page_allocator;
+    // const stderr = std.io.getStdErr().writer();
+
+    // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes
+    // const size = @max(8, @as(usize, @intCast(roc__mainForHost_1_exposed_size())));
+    // const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
+    // var output = @as([*]u8, @ptrCast(raw_output));
+
+    var output = RocStr.empty();
+    defer {
+        // allocator.free(raw_output);
+        output.decref();
+    }
+
+    // var timer = std.time.Timer.start() catch unreachable;
+
+    roc__mainForHost_1_exposed_generic(&output);
+
+    call_the_closure(&output);
     
-    const stdout = std.io.getStdOut().writer();
-    const stderr = std.io.getStdErr().writer();
+    // output.decref();
 
-    var timer = std.time.Timer.start() catch unreachable;
+    // const nanos = timer.read();
+    // const seconds = (@as(f64, @floatFromInt(nanos)) / 1_000_000_000.0);
 
-    _ = stdout.write("Initializing runner...\n") catch unreachable;
-
-    // actually call roc to populate the callresult
-    var callresult = RocStr.empty();
-    roc__mainForHost_1_exposed_generic(&callresult);
-
-    // const op: *anyopaque = undefined;
-    // roc__mainForHost_0_caller(undefined, op, &callresult);
-
-    const nanos = timer.read();
-    const seconds = (@as(f64, @floatFromInt(nanos)) / 1_000_000_000.0);
-
-    // stdout the result
-    stdout.print("{s}", .{callresult.asSlice()}) catch unreachable;
-    // stdout.print("{s}", .{cr_2.asSlice()}) catch unreachable;
-
-    callresult.decref();
-    // cr_2.decref();
-
-    stderr.print("runtime: {d:.3}ms\n", .{seconds * 1000}) catch unreachable;
+    // stderr.print("runtime: {d:.3}ms\n", .{seconds * 1000}) catch unreachable;
 
     return 0;
 }
 
-export fn roc_fx_stdoutLine(rocstr: *str.RocStr) callconv(.C) void {
+fn to_seconds(tms: std.os.timespec) f64 {
+    return @as(f64, @floatFromInt(tms.tv_sec)) + (@as(f64, @floatFromInt(tms.tv_nsec)) / 1_000_000_000.0);
+}
+
+// fn call_the_closure(closure_data_pointer: [*]u8) void {
+fn call_the_closure(closure_data_pointer: *RocStr) void {
+    const allocator = std.heap.page_allocator;
+
+    const size = roc__mainForHost_0_result_size();
+
+    if (size == 0) {
+        // the function call returns an empty record
+        // allocating 0 bytes causes issues because the allocator will return a NULL pointer
+        // So it's special-cased
+        const flags: u8 = 0;
+        var result: [1]u8 = .{0};
+        roc__mainForHost_0_caller(&flags, closure_data_pointer, &result);
+
+        return;
+    }
+
+    const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
+    var output = @as([*]u8, @ptrCast(raw_output));
+
+    defer {
+        allocator.free(raw_output);
+    }
+
+    const flags: u8 = 0;
+    roc__mainForHost_0_caller(&flags, closure_data_pointer, output);
+
+    return;
+}
+
+
+pub export fn roc_fx_getLine() str.RocStr {
+    return roc_fx_getLine_help() catch return str.RocStr.empty();
+}
+
+fn roc_fx_getLine_help() !RocStr {
+    const stdin = std.io.getStdIn().reader();
+    var buf: [400]u8 = undefined;
+
+    const line: []u8 = (try stdin.readUntilDelimiterOrEof(&buf, '\n')) orelse "";
+
+    return str.RocStr.init(@as([*]const u8, @ptrCast(line)), line.len);
+}
+
+pub export fn roc_fx_stdoutLine(rocPath: *RocStr) void {
+    return roc_fx_stdoutLine_help(rocPath) catch unreachable;
+}
+
+fn roc_fx_stdoutLine_help(rocPath: *RocStr) !void {
     const stdout = std.io.getStdOut().writer();
-    _ = stdout.write(rocstr.asSlice()) catch unreachable;
+    _ = stdout.write("testing\n") catch unreachable;
+    // _ = rocPath.asSlice();
+    stdout.print("{s}", .{rocPath.asSlice()}) catch unreachable;
+    // _ = stdout.write("\n") catch unreachable;
+    // return 0;
+}
+
+const GetInt = extern struct {
+    value: i64,
+    error_code: u8,
+    is_error: bool,
+};
+
+pub export fn roc_fx_getInt() GetInt {
+    if (roc_fx_getInt_help()) |value| {
+        const get_int = GetInt{ .is_error = false, .value = value, .error_code = 0 };
+        return get_int;
+    } else |err| switch (err) {
+        error.InvalidCharacter => {
+            return GetInt{ .is_error = true, .value = 0, .error_code = 0 };
+        },
+        else => {
+            return GetInt{ .is_error = true, .value = 0, .error_code = 1 };
+        },
+    }
+
+    return 0;
+}
+
+fn roc_fx_getInt_help() !i64 {
+    const stdin = std.io.getStdIn().reader();
+    var buf: [40]u8 = undefined;
+
+    // make sure to strip `\r` on windows
+    const raw_line: []u8 = (try stdin.readUntilDelimiterOrEof(&buf, '\n')) orelse "";
+    const line = std.mem.trimRight(u8, raw_line, &std.ascii.whitespace);
+
+    return std.fmt.parseInt(i64, line, 10);
 }

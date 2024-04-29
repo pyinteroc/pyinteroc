@@ -24,7 +24,6 @@
             mv roc_nightly* roc_nightly
             cp -r roc_nightly/crates/ crates/
             cp roc_nightly/roc roc
-            rm -rf roc_nightly/
           fi
 
           '';

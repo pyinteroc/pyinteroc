@@ -173,3 +173,8 @@ zig-cache/
 crates/
 roc
 zig-out/
+*.o
+platform/dynhost*
+*.rh
+*.rm
+roc_nightly
