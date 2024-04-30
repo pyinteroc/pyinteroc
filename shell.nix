@@ -1,5 +1,4 @@
 {
-  # Import the Nix packages collection
   pkgs ? import <nixpkgs> {},
 }:
 
@@ -8,9 +7,7 @@ let
   flake = builtins.getFlake (toString ./.);
 
   # Access the packageSet defined in the flake
-  # packageSet = flake.outputs.packages.${flake.inputs.nixpkgs.system}.packageSet;
-
-  # Optionally, you can also access other attributes from the flake, such as devShells
   devShell = flake.outputs.devShells.x86_64-linux.default;
+  # packageSet = flake.outputs.packages.${flake.inputs.nixpkgs.system}.packageSet;
 
 in devShell
