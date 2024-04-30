@@ -122,19 +122,10 @@ pub export fn main() u8 {
         allocator.free(raw_output);
     }
 
-    var timer = std.time.Timer.start() catch unreachable;
-
     roc__mainForHost_1_exposed_generic(output);
 
     call_the_closure(output);
 
-    const nanos = timer.read();
-    const seconds = (@as(f64, @floatFromInt(nanos)) / 1_000_000_000.0);
-
-    if (DEBUG) {
-        const stderr = std.io.getStdErr().writer();
-        stderr.print("runtime: {d:.3}ms\n", .{seconds * 1000}) catch unreachable;
-    }
     return 0;
 }
 
