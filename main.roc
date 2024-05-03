@@ -1,10 +1,6 @@
 app "pyinteroc"
     packages { pf: "platform/main.roc" }
-    imports [pf.Effect.{Effect}]
+    imports [ pf.Stdout.{ line, write }  ]
     provides [main] to pf
 
-main = 
-    Effect.map (Effect.stderrLine "Starting the project!!") 
-        \res -> when res is 
-            Ok _ -> {}
-            _ -> {}
+main = line "Starting the project!!"
