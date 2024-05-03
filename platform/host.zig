@@ -262,39 +262,45 @@ fn roc_fx_stdoutLine_help(rocPath: *RocStr) !RocRes_Void_Str {
     };
 }
 
-// pub export fn roc_fx_stdoutWrite(rocPath: *RocStr) RocRes_Void_Str {
-//     const errMsgIfAny = "ERROR_WRITING";
-//     const stdout = std.io.getStdOut().writer();
-//     _ = stdout.write(rocPath.asSlice()) catch return .{
-//         .payload = .{ .err = RocStr.init(errMsgIfAny, errMsgIfAny.len) }
-//     };
+pub export fn roc_fx_stdoutWrite(rocPath: *RocStr) RocRes_Void_Str {
+    const errMsgIfAny = "ERROR_WRITING";
+    const stdout = std.io.getStdOut().writer();
+    _ = stdout.write(rocPath.asSlice()) catch return .{
+        .payload = .{ .err = RocStr.init(errMsgIfAny, errMsgIfAny.len)}
+        , .tag = 0
+    };
     
-//     return .{
-//      .payload = .{ .err = RocStr.init("",0) }
-//     };
-// }
+    return .{
+        .payload = .{.err = RocStr.init("",0)}
+        , .tag = 1
+    };
+}
 
-// pub export fn roc_fx_stderrWrite(rocPath: *RocStr) RocRes_Void_Str {
-//     const errMsgIfAny = "ERROR_WRITING_TO_STDERR";
-//     const stdout = std.io.getStdErr().writer();
-//     _ = stdout.write(rocPath.asSlice()) catch return .{
-//         .payload = .{ .err = RocStr.init(errMsgIfAny, errMsgIfAny.len) }
-//     };
+pub export fn roc_fx_stderrWrite(rocPath: *RocStr) RocRes_Void_Str {
+    const errMsgIfAny = "ERROR_WRITING_TO_STDERR";
+    const stdout = std.io.getStdErr().writer();
+    _ = stdout.write(rocPath.asSlice()) catch return .{
+        .payload = .{ .err = RocStr.init(errMsgIfAny, errMsgIfAny.len) }
+        , .tag = 0
+    };
     
-//     return .{
-//      .payload = .{ .err = RocStr.init("",0) }
-//     };
-// }
+    return .{ 
+        .payload = .{ .err = RocStr.init("",0) }
+        , .tag = 1
+    };
+}
 
-// pub export fn roc_fx_stderrLine(rocPath: *RocStr) RocRes_Void_Str {
-//     const errMsgIfAny = "ERROR_WRITING_TO_STDERR";
-//     const stdout = std.io.getStdErr().writer();
-//     stdout.print("{s}\n", .{rocPath.asSlice()}) catch return .{
-//         .payload = .{ .err = RocStr.init(errMsgIfAny, errMsgIfAny.len) }
-//     };
+pub export fn roc_fx_stderrLine(rocPath: *RocStr) RocRes_Void_Str {
+    const errMsgIfAny = "ERROR_WRITING_TO_STDERR";
+    const stdout = std.io.getStdErr().writer();
+    stdout.print("{s}\n", .{rocPath.asSlice()}) catch return .{
+        .payload = .{ .err = RocStr.init(errMsgIfAny, errMsgIfAny.len) }
+        , .tag = 0
+    };
     
-//     return .{
-//      .payload = .{ .err = RocStr.init("",0) }
-//     };
-// }
+    return .{
+        .payload = .{ .err = RocStr.init("",0) }
+        , .tag = 1
+    };
+}
 
