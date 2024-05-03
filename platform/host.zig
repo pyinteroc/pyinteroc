@@ -304,3 +304,27 @@ pub export fn roc_fx_stderrLine(rocPath: *RocStr) RocRes_Void_Str {
     };
 }
 
+
+const RocRes_Str_Str = RocResultUnion(RocStr, RocStr);
+pub export fn roc_fx_stdinLine() RocRes_Str_Str {
+    const errMsgIfAny = "ERROR_READING_LINE";
+    return roc_fx_stdinLine_help() catch return .{
+        .payload = .{ .err = RocStr.init(errMsgIfAny, errMsgIfAny.len) },
+        .tag = 0
+    };
+}
+
+fn roc_fx_stdinLine_help() !RocRes_Str_Str {
+    const stdin = std.io.getStdIn().reader();
+    var buf: [1024]u8 = undefined; // Adjust buffer size as needed
+
+    const line: []u8 = (try stdin.readUntilDelimiterOrEof(&buf, '\n')) orelse return error.EndOfFile;
+
+    // Optionally trim the newline character
+    const trimmedLine = std.mem.trimRight(u8, line, "\n");
+
+    return .{
+        .payload = .{ .ok = RocStr.init(@as([*]const u8, trimmedLine.ptr), trimmedLine.len) },
+        .tag = 1
+    };
+}
