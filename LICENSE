@@ -3,9 +3,8 @@ Copyright (C) 2024  Brian Leiva
 AGPL-V3 Licence
 
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation, either version 3 of the
-License, or (at your option) any later version.
+it under the terms of the GNU Affero General Public License version 3 
+as published by the Free Software Foundation.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,11 +14,11 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+*** For a more permissive licence contact the author: n68cx7bm_at_duck.com ***
+
+The original basic-cli types were copied under UPL from https://github.com/roc-lang/basic-cli/ 
+    
     Copyright © 2022 Richard Feldman and subsequent basic-cli authors <github.com/roc-lang/basic-cli/graphs/contributors>
 
     The Universal Permissive License (UPL), Version 1.0
-
-    The original basic-cli types were copied under UPL: https://github.com/roc-lang/basic-cli/blob/main/LICENSE from https://github.com/roc-lang/basic-cli/ 
-    
-
-For a more permissive licence contact the author: n68cx7bm_at_duck.com
+    https://github.com/roc-lang/basic-cli/blob/main/LICENSE
