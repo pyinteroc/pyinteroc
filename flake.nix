@@ -30,6 +30,9 @@
           deployRocNightly = 
             writeShellScriptBin "deployRocNightly" ./ci/deploy_roc_nightly.sh ;
           
+          publish = 
+            writeShellScriptBin "publish" ./ci/push_to_public_repos.sh ;
+          
         };
 
       in rec {
@@ -40,6 +43,7 @@
             entr
             curl
             deployRocNightly
+            publish
             
             
           ];
