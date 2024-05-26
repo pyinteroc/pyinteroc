@@ -15,15 +15,6 @@ pub fn build(b: *std.Build) void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{});
 
-    // // adding glue library
-    // const libglue = b.addSharedLibrary(.{
-    //     .name = "glue",
-    //     .root_source_file = .{
-    //         .path = "src/vendored/main.zig" },
-    //     .target = target,
-    //     .optimize = optimize
-    // });
-
     const exe = b.addExecutable(.{
         .name = "pyinteroc",
         // In this case the main source file is merely a path, however, in more
@@ -36,8 +27,17 @@ pub fn build(b: *std.Build) void {
     exe.linkLibC(); // add system libs
     
     exe.addLibraryPath(.{ .path = "lib" });
-    exe.linkSystemLibrary("Roc");
+    exe.linkSystemLibrary("main");
 
+    // // adding glue library
+    // const libglue = b.addSharedLibrary(.{
+    //     .name = "glue",
+    //     .root_source_file = .{
+    //         .path = "platform/crates/glue.zig"
+    //     },
+    //     .target = target,
+    //     .optimize = optimize
+    // });
     // exe.linkLibrary(libglue);
     // b.installArtifact(libglue);
     

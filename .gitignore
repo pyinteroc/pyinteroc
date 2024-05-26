@@ -170,7 +170,11 @@ result-*
 main
 main.ll
 zig-cache/
-crates/
+
+### ignore crates only at the root
+/crates/
+!/platform/crates/
+
 roc
 zig-out/
 *.o

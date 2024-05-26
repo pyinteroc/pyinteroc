@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+./roc build --lib --output lib/libmain.so --emit-llvm-ir
+zig build

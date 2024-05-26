@@ -1,7 +1,14 @@
 const std = @import("std");
 const builtin = @import("builtin");
-const str = @import("glue").str;
-const RocStr = str.RocStr;
+
+const glue = @import("crates/glue.zig");
+// const glue = @import("glue");
+
+const str = glue.str;
+const RocStr = glue.str.RocStr;
+const list = glue.list;
+const RocList = glue.list.RocList;
+
 const testing = std.testing;
 const expectEqual = testing.expectEqual;
 const expect = testing.expect;
@@ -327,4 +334,17 @@ fn roc_fx_stdinLine_help() !RocRes_Str_Str {
         .payload = .{ .ok = RocStr.init(@as([*]const u8, trimmedLine.ptr), trimmedLine.len) },
         .tag = 1
     };
+}
+
+pub export fn roc_fx_stdinBytes() RocList {
+    const errMsgIfAny = "ERROR_READING_INPUT";
+    return roc_fx_stdinBytes_helper() catch return RocList.fromSlice(u8, errMsgIfAny);
+}
+
+fn roc_fx_stdinBytes_helper() !RocList {
+    const stdin = std.io.getStdIn().reader();
+    var buf: [1024]u8 = undefined; // Adjust buffer size as needed
+    const line: []u8 = (try stdin.readUntilDelimiterOrEof(&buf, '\n')) orelse return error.EndOfFile;
+    
+    return RocList.fromSlice(u8, line);
 }

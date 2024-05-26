@@ -20,10 +20,13 @@
         roc = rocPkgs.cli;
         
         deployRocNightly = 
-          writeShellScriptBin "deployRocNightly" ./ci/deploy_roc_nightly.sh ;
+          writeShellScriptBin "deployRocNightly" ./ci/deploy_roc_nightly ;
         
         publish = 
-          writeShellScriptBin "publish" ./ci/push_to_public_repos.sh ;
+          writeShellScriptBin "publish" ./ci/push_to_public_repos ;
+          
+        buildAll = 
+          writeShellScriptBin "build_all" ./ci/build_all ;
       };
 
     in rec {
@@ -33,7 +36,11 @@
           curl
           deployRocNightly
           publish
+          buildAll
         ];
+        shellHook = ''
+          alias roc="./roc"
+        '';
       };
       
       devShells.${system} = {

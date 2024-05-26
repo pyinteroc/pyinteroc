@@ -2,7 +2,7 @@ platform "python"
     requires {} { main :  Task {} [Exit I32 Str]_ }
     exposes []
     packages {}
-    imports [Task.{Task}, Stdout.{line}]
+    imports [Task.{Task}, Stderr.{line}]
     provides [mainForHost]
 
 mainForHost : Task {} I32 as Fx
