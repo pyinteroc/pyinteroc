@@ -10,7 +10,7 @@
   outputs = { self, nixpkgs, roc, ... }@inputs:
     let
       system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
+      pkgs = nixpkgs.legacyPackages.${system};
       rocPkgs = roc.packages.${system};
 
 
