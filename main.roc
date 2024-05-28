@@ -1,68 +1,45 @@
 app [main] { pf: platform "./platform/main.roc" }
 
+
 import pf.Stdout
-import pf.Task exposing [Task]
-import pf.Arg.Cli as Cli
-import pf.Arg.Subcommand as Subcommand
-import pf.Arg.Opt as Opt
-import pf.Arg.Param as Param
-import pf.Arg
+import pf.Task
 
 main =
-    { command: subcommand } = Arg.parse! cli
+    List.range { start: At 1, end: At 100 }
+    |> List.map fizzBuzz
+    |> Str.joinWith ","
+    |> Stdout.line
 
-    result =
-        when subcommand is
-            Max { first, rest } ->
-                rest
-                |> List.walk first \max, n ->
-                    Num.max max n
+## Determine the FizzBuzz value for a given integer.
+## Returns "Fizz" for multiples of 3, "Buzz" for
+## multiples of 5, "FizzBuzz" for multiples of both
+## 3 and 5, and the original number for anything else.
+fizzBuzz : I32 -> Str
+fizzBuzz = \n ->
+    fizz = n % 3 == 0
+    buzz = n % 5 == 0
 
-            Div { dividend, divisor } ->
-                dividend / divisor
+    if fizz && buzz then
+        "FizzBuzz"
+    else if fizz then
+        "Fizz"
+    else if buzz then
+        "Buzz"
+    else
+        Num.toStr n
 
-    Stdout.line (Num.toStr result)
+## Test Case 1: not a multiple of 3 or 5
+expect fizzBuzz 1 == "1"
+expect fizzBuzz 7 == "7"
 
-cli =
-    Cli.build {
-        command: <- Subcommand.required [maxSubcommand, divideSubcommand],
-    }
-    |> Cli.finish {
-        name: "args-example",
-        description: "A calculator example of the CLI platform argument parser.",
-        version: "0.1.0",
-    }
-    |> Cli.assertValid
+## Test Case 2: multiple of 3
+expect fizzBuzz 3 == "Fizz"
+expect fizzBuzz 9 == "Fizz"
 
-maxSubcommand =
-    Cli.build {
-        # ensure there's at least one parameter provided
-        first: <- Param.dec { name: "first", help: "the first number to compare." },
-        rest: <- Param.decList { name: "rest", help: "the other numbers to compare." },
-    }
-    |> Subcommand.finish {
-        name: "max",
-        description: "Find the largest of multiple numbers.",
-        mapper: Max,
-    }
+## Test Case 3: multiple of 5
+expect fizzBuzz 5 == "Buzz"
+expect fizzBuzz 20 == "Buzz"
 
-divideSubcommand =
-    Cli.build {
-        dividend: <-
-            Opt.dec {
-                short: "n",
-                long: "dividend",
-                help: "the number to divide; corresponds to a numerator.",
-            },
-        divisor: <-
-            Opt.dec {
-                short: "d",
-                long: "divisor",
-                help: "the number to divide by; corresponds to a denominator.",
-            },
-    }
-    |> Subcommand.finish {
-        name: "div",
-        description: "Divide two numbers.",
-        mapper: Div,
-    }
+## Test Case 4: multiple of both 3 and 5
+expect fizzBuzz 15 == "FizzBuzz"
+expect fizzBuzz 45 == "FizzBuzz"

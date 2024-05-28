@@ -113,6 +113,8 @@ comptime {
     if (builtin.os.tag == .windows) {
         @export(roc_getppid_windows_stub, .{ .name = "roc_getppid", .linkage = .Strong });
     }
+    
+    @export(roc_fx_args, .{ .name="roc_fx_args", .linkage = .Strong,  });
 }
 
 const Unit = extern struct {};
@@ -128,6 +130,9 @@ pub export fn main() u8 {
     defer {
         allocator.free(raw_output);
     }
+
+    // Args just don't work in this setup. Postponing them ...
+    // std.debug.print("There are {d} args:\n", .{std.os.argv.len});
 
     roc__mainForHost_1_exposed_generic(output);
 
@@ -347,4 +352,39 @@ fn roc_fx_stdinBytes_helper() !RocList {
     const line: []u8 = (try stdin.readUntilDelimiterOrEof(&buf, '\n')) orelse return error.EndOfFile;
     
     return RocList.fromSlice(u8, line);
+}
+
+fn roc_fx_args() callconv(.C) RocList {
+    const errMsgIfAny = [2]RocStr{RocStr.fromSlice("2"),
+            RocStr.fromSlice("4")};
+
+
+    return roc_fx_args_help() catch return RocList.fromSlice(
+        RocStr, &errMsgIfAny);
+}
+
+
+fn roc_fx_args_help() !RocList {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer _ = gpa.deinit();
+    
+    // const args = std.os.argv; /// Doesn't work on windows.
+
+    // Parse args into string array (error union needs 'try')
+    const args = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, args);
+
+    // Get and print them!
+    std.debug.print("There are {d} args:\n", .{args.len});
+    var roc_strs = std.ArrayList(RocStr).init(allocator);
+
+    defer roc_strs.deinit();
+
+    for (args) |arg| {
+        try roc_strs.append(RocStr.fromSlice(arg));
+        std.debug.print("  {s}\n", .{arg});
+    }
+
+    return RocList.fromSlice(RocStr, roc_strs.items);
 }
