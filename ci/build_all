@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
 
-./roc build --lib --output lib/libmain.so --emit-llvm-ir
-zig build
+./roc build --lib \
+    --output lib/libmain.so \
+    --emit-llvm-ir
+
+zig build-lib -dynamic -lc \
+    -femit-bin="lib/libhost.so" \
+    platform/host.zig \
+    lib/libmain.so
