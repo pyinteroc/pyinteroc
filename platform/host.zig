@@ -141,10 +141,6 @@ pub export fn main() u8 {
     return 0;
 }
 
-fn to_seconds(tms: std.os.timespec) f64 {
-    return @as(f64, @floatFromInt(tms.tv_sec)) + (@as(f64, @floatFromInt(tms.tv_nsec)) / 1_000_000_000.0);
-}
-
 fn call_the_closure(closure_data_pointer: [*]u8) void {
     const allocator = std.heap.page_allocator;
 
