@@ -17,7 +17,7 @@ const maxInt = std.math.maxInt;
 const mem = std.mem;
 const Allocator = mem.Allocator;
 
-extern fn roc__mainForHost_1_exposed_generic([*]u8) void;
+extern fn roc__mainForHost_1_exposed_generic([*]u8, i32) void;
 extern fn roc__mainForHost_1_exposed_size() i64;
 extern fn roc__mainForHost_0_caller(*const u8, [*]u8, [*]u8) void;
 extern fn roc__mainForHost_0_size() i64;
@@ -134,7 +134,7 @@ pub export fn main() u8 {
     // Args just don't work in this setup. Postponing them ...
     // std.debug.print("There are {d} args:\n", .{std.os.argv.len});
 
-    roc__mainForHost_1_exposed_generic(output);
+    roc__mainForHost_1_exposed_generic(output, 30);
 
     call_the_closure(output);
 

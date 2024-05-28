@@ -5,10 +5,10 @@ import pf.Stdout
 import pf.Task
 
 main =
-    List.range { start: At 1, end: At 100 }
+    \n -> (List.range { start: At 1, end: At n }
     |> List.map fizzBuzz
     |> Str.joinWith ","
-    |> Stdout.line
+    |> Stdout.line)
 
 ## Determine the FizzBuzz value for a given integer.
 ## Returns "Fizz" for multiples of 3, "Buzz" for
