@@ -41,6 +41,7 @@ hosted Effect
         sleepMillis,
         commandStatus,
         commandOutput,
+        setResult,
     ]
     imports [
         InternalHttp.{ Request, InternalResponse },
@@ -98,3 +99,6 @@ dirCreate : List U8 -> Effect (Result {} Str)
 dirCreateAll : List U8 -> Effect (Result {} Str)
 dirDeleteEmpty : List U8 -> Effect (Result {} Str)
 dirDeleteAll : List U8 -> Effect (Result {} Str)
+
+### Python related effects
+setResult : I32 -> Effect {}

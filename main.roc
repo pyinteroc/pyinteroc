@@ -3,6 +3,7 @@ app [main] { pf: platform "./platform/main.roc" }
 
 import pf.Stdout
 import pf.Task
+import pf.Py
 
 main =
     \n -> (List.range { start: At 1, end: At n }

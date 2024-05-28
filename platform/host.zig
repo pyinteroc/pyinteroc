@@ -141,7 +141,8 @@ pub export fn main() u8 {
     return 0;
 }
 
-pub export fn call_roc(num:i32) u8 {
+var pyResult: i32 = 0;
+pub export fn call_roc(num:i32) i32 {
     const allocator = std.heap.page_allocator;
 
     // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes
@@ -153,14 +154,11 @@ pub export fn call_roc(num:i32) u8 {
         allocator.free(raw_output);
     }
 
-    // Args just don't work in this setup. Postponing them ...
-    // std.debug.print("There are {d} args:\n", .{std.os.argv.len});
-
     roc__mainForHost_1_exposed_generic(output, num);
 
     call_the_closure(output);
 
-    return 0;
+    return pyResult;
 }
 
 fn call_the_closure(closure_data_pointer: [*]u8) void {
@@ -239,39 +237,6 @@ pub export fn roc_fx_putLine(rocPath: *str.RocStr) i64 {
     stdout.print("\n", .{}) catch unreachable;
 
     return 0;
-}
-
-const GetInt = extern struct {
-    value: i64,
-    error_code: u8,
-    is_error: bool,
-};
-
-pub export fn roc_fx_getInt() GetInt {
-    if (roc_fx_getInt_help()) |value| {
-        const get_int = GetInt{ .is_error = false, .value = value, .error_code = 0 };
-        return get_int;
-    } else |err| switch (err) {
-        error.InvalidCharacter => {
-            return GetInt{ .is_error = true, .value = 0, .error_code = 0 };
-        },
-        else => {
-            return GetInt{ .is_error = true, .value = 0, .error_code = 1 };
-        },
-    }
-
-    return 0;
-}
-
-fn roc_fx_getInt_help() !i64 {
-    const stdin = std.io.getStdIn().reader();
-    var buf: [40]u8 = undefined;
-
-    // make sure to strip `\r` on windows
-    const raw_line: []u8 = (try stdin.readUntilDelimiterOrEof(&buf, '\n')) orelse "";
-    const line = std.mem.trimRight(u8, raw_line, &std.ascii.whitespace);
-
-    return std.fmt.parseInt(i64, line, 10);
 }
 
 pub export fn roc_fx_stdoutLine(rocPath: *RocStr) RocRes_Void_Str {
@@ -405,4 +370,8 @@ fn roc_fx_args_help() !RocList {
     }
 
     return RocList.fromSlice(RocStr, roc_strs.items);
+}
+
+pub export fn roc_fx_setResult(n: i32) void {
+    pyResult = n;
 }

@@ -14,5 +14,3 @@ lib_path = pkg_resources.files("lib")\
 
 ### Calling the shared library function
 roc = ffi.dlopen(str(lib_path))
-
-# result = roc.main()
