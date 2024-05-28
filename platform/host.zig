@@ -141,6 +141,28 @@ pub export fn main() u8 {
     return 0;
 }
 
+pub export fn call_roc(num:i32) u8 {
+    const allocator = std.heap.page_allocator;
+
+    // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes
+    const size = @max(8, @as(usize, @intCast(roc__mainForHost_1_exposed_size())));
+    const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
+    var output = @as([*]u8, @ptrCast(raw_output));
+
+    defer {
+        allocator.free(raw_output);
+    }
+
+    // Args just don't work in this setup. Postponing them ...
+    // std.debug.print("There are {d} args:\n", .{std.os.argv.len});
+
+    roc__mainForHost_1_exposed_generic(output, num);
+
+    call_the_closure(output);
+
+    return 0;
+}
+
 fn call_the_closure(closure_data_pointer: [*]u8) void {
     const allocator = std.heap.page_allocator;
 

@@ -5,6 +5,7 @@ ffi = FFI()
 
 ffi.cdef("""
     int main();
+    int call_roc(int);
 """)
 
 # Loading the shared library
@@ -12,6 +13,6 @@ lib_path = pkg_resources.files("lib")\
     .joinpath("libhost.so")
 
 ### Calling the shared library function
-roc_lib = ffi.dlopen(str(lib_path))
+roc = ffi.dlopen(str(lib_path))
 
-result = roc_lib.main()
+# result = roc.main()
