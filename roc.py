@@ -5,13 +5,14 @@ ffi = FFI()
 
 # Assuming you know the function signatures you want to call
 ffi.cdef("""
-    int add(int, int);
+    int main();
 """)
 
 # Load the shared library
-with pkg_resources.path("pyinteroc.lib", "libhost.so") as lib_path:
-    lib = ffi.dlopen(str(lib_path))
+lib_path = pkg_resources.files("lib")\
+    .joinpath("libhost.so")
+roc_lib = ffi.dlopen(str(lib_path))
 
 # Now you can call functions from the library, e.g., `lib.add(2, 3)`
-result = lib.add(2, 3)
-print(result)
+result = roc_lib.main()
+# print(result)
