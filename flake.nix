@@ -26,7 +26,7 @@
           writeShellScriptBin "publish" ./ci/push_to_public_repos ;
           
         buildAll = 
-          writeShellScriptBin "build_all" ./ci/build_all ;
+          writeShellScriptBin "build" ./ci/build_all ;
       };
 
     in rec {
