@@ -147,7 +147,7 @@ const PyArg = extern struct {
     num:i32
 };
 
-pub export fn call_roc( arg:PyArg ) i32 {
+pub export fn call_roc( arg: *PyArg ) i32 {
     const allocator = std.heap.page_allocator;
 
     // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes

@@ -10,7 +10,7 @@ ffi.cdef("""
     } PyArg;
     
     int main();
-    int call_roc(PyArg arg);
+    int call_roc(PyArg* arg);
 """)
 
 
