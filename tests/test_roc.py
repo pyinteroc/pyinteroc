@@ -10,7 +10,7 @@ def test_roc(capfd):
     
     result = roc.call_roc(py_arg)
     out, err = capfd.readouterr()
-    expected_output = "Number received!! 10"
+    expected_output = "Calling FN: function_name\nNumber received!! 10"
     # Assuming the output is printed with a newline at the end, we strip it before comparing
     assert out.strip() == expected_output
 

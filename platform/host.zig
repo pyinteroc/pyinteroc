@@ -143,7 +143,7 @@ pub export fn main() u8 {
 
 var pyResult: i32 = 0;
 const PyArg = extern struct {
-    fn_num: u8,
+    fn_name: [*c]const u8,
     num:i32
 };
 
@@ -158,6 +158,10 @@ pub export fn call_roc( arg: *PyArg ) i32 {
     defer {
         allocator.free(raw_output);
     }
+
+
+    const stdout = std.io.getStdOut().writer();
+    stdout.print("Calling FN: {s}\n", .{arg.fn_name}) catch unreachable;
 
     roc__mainForHost_1_exposed_generic(output, arg.num);
 
@@ -196,6 +200,7 @@ fn call_the_closure(closure_data_pointer: [*]u8) void {
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// EFFECTS START HERE ///////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 

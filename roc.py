@@ -5,11 +5,10 @@ ffi = FFI()
 
 ffi.cdef("""
     typedef struct {
-        uint8_t fn_num;
+        const char* fn_name;
         int32_t num;
     } PyArg;
     
-    int main();
     int call_roc(PyArg* arg);
 """)
 
@@ -20,4 +19,9 @@ lib_path = pkg_resources.files("lib")\
 
 ### Calling the shared library function
 roc = ffi.dlopen(str(lib_path))
-py_arg = ffi.new("PyArg *", {'fn_num': 5, 'num': 10})
+py_arg = ffi.new(
+    "PyArg *"
+    , {
+        'fn_name': ffi.new("char[]", b"function_name")
+        , 'num': 10
+    })
