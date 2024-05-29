@@ -142,7 +142,12 @@ pub export fn main() u8 {
 }
 
 var pyResult: i32 = 0;
-pub export fn call_roc(num:i32) i32 {
+const PyArg = extern struct {
+    fn_num: u8,
+    num:i32
+};
+
+pub export fn call_roc( arg:PyArg ) i32 {
     const allocator = std.heap.page_allocator;
 
     // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes
@@ -154,7 +159,7 @@ pub export fn call_roc(num:i32) i32 {
         allocator.free(raw_output);
     }
 
-    roc__mainForHost_1_exposed_generic(output, num);
+    roc__mainForHost_1_exposed_generic(output, arg.num);
 
     call_the_closure(output);
 
