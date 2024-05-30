@@ -142,12 +142,12 @@ pub export fn main() u8 {
 }
 
 var pyResult: i32 = 0;
-const PyArg = extern struct {
+const PyArgC = extern struct {
     fn_name: [*c]const u8,
     num:i32
 };
 
-pub export fn call_roc( arg: *PyArg ) i32 {
+pub export fn call_roc( arg: *PyArgC ) i32 {
     const allocator = std.heap.page_allocator;
 
     // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes
