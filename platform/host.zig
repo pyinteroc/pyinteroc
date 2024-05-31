@@ -16,12 +16,7 @@ const maxInt = std.math.maxInt;
 const mem = std.mem;
 const Allocator = mem.Allocator;
 
-const PyArg = extern struct {
-    function: [*]const u8,
-    args: i32
-};
-
-extern fn roc__mainForHost_1_exposed_generic([*]u8, [*]u8) void;
+extern fn roc__mainForHost_1_exposed_generic([*]u8, [*]const u8) void;
 extern fn roc__mainForHost_1_exposed_size() i64;
 extern fn roc__mainForHost_0_caller(*const u8, [*]u8, [*]u8) void;
 extern fn roc__mainForHost_0_size() i64;
@@ -131,32 +126,29 @@ pub export fn main() u8 {
     const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
     var output = @as([*]u8, @ptrCast(raw_output));
 
-    const rstr = RocStr.fromSlice("TEST_PYARG_STR");
-    const rstr2 = RocStr.fromSlice("\nNew one \n");
+    const rstr = RocStr.fromSlice("STR2");
     defer {
         rstr.decref();
-        rstr2.decref();
     }
 
     defer {
         allocator.free(raw_output);
     }
 
-    // Args just don't work in this setup. Postponing them ...
-    // std.debug.print("There are {d} args:\n", .{std.os.argv.len});
-
-    const rocslice = [_]RocStr{rstr, rstr2};
-    const roclist = RocList.fromSlice(RocStr, &rocslice);
-    defer roclist.decref(@alignOf(RocStr));
-
-    roc__mainForHost_1_exposed_generic(output, list.listAllocationPtr(roclist).?);
+    roc__mainForHost_1_exposed_generic(output, rstr.asU8ptr());
 
     call_the_closure(output);
 
     return 0;
 }
 
+
 var pyResult: i32 = 0;
+var pyArgs = [_][]const u8{"First Str", "Second Str.."};
+
+// defer RocList.decref(@sizeOf(RocStr));
+
+
 // const PyArgC = extern struct {
 //     fn_name: [*c]const u8,
 //     num:i32
@@ -363,32 +355,21 @@ fn roc_fx_stdinBytes_helper() !RocList {
 }
 
 fn roc_fx_args() callconv(.C) RocList {
-    const errMsgIfAny = [2]RocStr{RocStr.fromSlice("2"),
-            RocStr.fromSlice("4")};
-    // return roc_fx_args_help() catch return RocList.fromSlice(
-    //     RocStr, &errMsgIfAny);
-    return RocList.fromSlice(RocStr, &errMsgIfAny);
+    return roc_fx_args_help() catch return RocList.empty();
 }
-
 
 fn roc_fx_args_help() !RocList {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
-    
-    // const args = std.os.argv; /// Doesn't work on windows.
-
-    // Parse args into string array (error union needs 'try')
-    const args = try std.process.argsAlloc(allocator);
-    defer std.process.argsFree(allocator, args);
 
     // Get and print them!
-    std.debug.print("There are {d} args:\n", .{args.len});
+    std.debug.print("There are {d} args:\n", .{pyArgs.len});
     var roc_strs = std.ArrayList(RocStr).init(allocator);
 
     defer roc_strs.deinit();
 
-    for (args) |arg| {
+    for (pyArgs) |arg| {
         try roc_strs.append(RocStr.fromSlice(arg));
         std.debug.print("  {s}\n", .{arg});
     }
