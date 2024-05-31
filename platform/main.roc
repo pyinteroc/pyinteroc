@@ -5,9 +5,9 @@ platform "python"
     imports [Task.{Task}, Stderr.{line}]
     provides [mainForHost]
 
-mainForHost : I32 -> Task {} I32 as Fx
+mainForHost : Str -> Task {} I32 as Fx
 mainForHost =
-    \n -> Task.attempt (main n) \res ->
+    \_s -> Task.attempt (main 10) \res ->
         when res is
             Ok {} -> Task.ok {}
 

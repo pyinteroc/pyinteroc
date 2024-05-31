@@ -2,7 +2,6 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 const glue = @import("crates/glue.zig");
-// const glue = @import("glue");
 
 const str = glue.str;
 const RocStr = glue.str.RocStr;
@@ -17,7 +16,12 @@ const maxInt = std.math.maxInt;
 const mem = std.mem;
 const Allocator = mem.Allocator;
 
-extern fn roc__mainForHost_1_exposed_generic([*]u8, i32) void;
+const PyArg = extern struct {
+    function: RocStr,
+    args: i32
+};
+
+extern fn roc__mainForHost_1_exposed_generic([*]u8, [*]const u8) void;
 extern fn roc__mainForHost_1_exposed_size() i64;
 extern fn roc__mainForHost_0_caller(*const u8, [*]u8, [*]u8) void;
 extern fn roc__mainForHost_0_size() i64;
@@ -127,6 +131,11 @@ pub export fn main() u8 {
     const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
     var output = @as([*]u8, @ptrCast(raw_output));
 
+    const rstr = RocStr.fromSlice("TEST_STR");
+    defer {
+        rstr.decref();
+    }
+
     defer {
         allocator.free(raw_output);
     }
@@ -134,7 +143,13 @@ pub export fn main() u8 {
     // Args just don't work in this setup. Postponing them ...
     // std.debug.print("There are {d} args:\n", .{std.os.argv.len});
 
-    roc__mainForHost_1_exposed_generic(output, 30);
+
+    // const arg = .{
+    //     .function=rstr,
+    //     .args=15
+    // };
+
+    roc__mainForHost_1_exposed_generic(output, rstr.asU8ptr());
 
     call_the_closure(output);
 
@@ -142,33 +157,33 @@ pub export fn main() u8 {
 }
 
 var pyResult: i32 = 0;
-const PyArgC = extern struct {
-    fn_name: [*c]const u8,
-    num:i32
-};
+// const PyArgC = extern struct {
+//     fn_name: [*c]const u8,
+//     num:i32
+// };
 
-pub export fn call_roc( arg: *PyArgC ) i32 {
-    const allocator = std.heap.page_allocator;
+// pub export fn call_roc( arg: *PyArgC ) i32 {
+//     const allocator = std.heap.page_allocator;
 
-    // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes
-    const size = @max(8, @as(usize, @intCast(roc__mainForHost_1_exposed_size())));
-    const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
-    var output = @as([*]u8, @ptrCast(raw_output));
+//     // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes
+//     const size = @max(8, @as(usize, @intCast(roc__mainForHost_1_exposed_size())));
+//     const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
+//     var output = @as([*]u8, @ptrCast(raw_output));
 
-    defer {
-        allocator.free(raw_output);
-    }
+//     defer {
+//         allocator.free(raw_output);
+//     }
 
 
-    const stdout = std.io.getStdOut().writer();
-    stdout.print("Calling FN: {s}\n", .{arg.fn_name}) catch unreachable;
+//     const stdout = std.io.getStdOut().writer();
+//     stdout.print("Calling FN: {s}\n", .{arg.fn_name}) catch unreachable;
 
-    roc__mainForHost_1_exposed_generic(output, arg.num);
+//     roc__mainForHost_1_exposed_generic(output, arg.num);
 
-    call_the_closure(output);
+//     call_the_closure(output);
 
-    return pyResult;
-}
+//     return pyResult;
+// }
 
 fn call_the_closure(closure_data_pointer: [*]u8) void {
     const allocator = std.heap.page_allocator;
