@@ -1,13 +1,13 @@
 platform "python"
-    requires {} { main : PyArg -> Task {} [Exit I32 Str]_ }
+    requires {} { main : Str -> Task {} [Exit I32 Str]_ }
     exposes []
     packages {}
-    imports [Task.{Task}, Stderr.{line}, PyTypes.{PyArg}]
+    imports [Task.{Task}, Stderr.{line}, PyTypes.{PyArgs}]
     provides [mainForHost]
 
-mainForHost : PyArg  -> Task {} I32 as Fx
+mainForHost : Str -> Task {} I32 as Fx
 mainForHost =
-    \py -> Task.attempt (main py) \res ->
+    \s -> Task.attempt (main (s)) \res ->
         when res is
             Ok {} -> Task.ok {}
 

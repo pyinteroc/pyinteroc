@@ -17,11 +17,11 @@ const mem = std.mem;
 const Allocator = mem.Allocator;
 
 const PyArg = extern struct {
-    function: RocStr,
-    // args: i32
+    function: [*]const u8,
+    args: i32
 };
 
-extern fn roc__mainForHost_1_exposed_generic([*]u8, *const PyArg) void;
+extern fn roc__mainForHost_1_exposed_generic([*]u8, [*]u8) void;
 extern fn roc__mainForHost_1_exposed_size() i64;
 extern fn roc__mainForHost_0_caller(*const u8, [*]u8, [*]u8) void;
 extern fn roc__mainForHost_0_size() i64;
@@ -132,14 +132,10 @@ pub export fn main() u8 {
     var output = @as([*]u8, @ptrCast(raw_output));
 
     const rstr = RocStr.fromSlice("TEST_PYARG_STR");
-    const arg = PyArg{
-        .function=rstr,
-        // .args=11
-            
-    };
-    
+    const rstr2 = RocStr.fromSlice("\nNew one \n");
     defer {
         rstr.decref();
+        rstr2.decref();
     }
 
     defer {
@@ -149,7 +145,11 @@ pub export fn main() u8 {
     // Args just don't work in this setup. Postponing them ...
     // std.debug.print("There are {d} args:\n", .{std.os.argv.len});
 
-    roc__mainForHost_1_exposed_generic(output, &arg);
+    const rocslice = [_]RocStr{rstr, rstr2};
+    const roclist = RocList.fromSlice(RocStr, &rocslice);
+    defer roclist.decref(@alignOf(RocStr));
+
+    roc__mainForHost_1_exposed_generic(output, list.listAllocationPtr(roclist).?);
 
     call_the_closure(output);
 
@@ -365,10 +365,9 @@ fn roc_fx_stdinBytes_helper() !RocList {
 fn roc_fx_args() callconv(.C) RocList {
     const errMsgIfAny = [2]RocStr{RocStr.fromSlice("2"),
             RocStr.fromSlice("4")};
-
-
-    return roc_fx_args_help() catch return RocList.fromSlice(
-        RocStr, &errMsgIfAny);
+    // return roc_fx_args_help() catch return RocList.fromSlice(
+    //     RocStr, &errMsgIfAny);
+    return RocList.fromSlice(RocStr, &errMsgIfAny);
 }
 
 
