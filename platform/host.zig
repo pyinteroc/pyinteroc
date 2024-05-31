@@ -17,7 +17,7 @@ const mem = std.mem;
 const Allocator = mem.Allocator;
 
 const PyArg = extern struct {
-    function: RocStr
+    function: RocStr,
     // args: i32
 };
 
@@ -133,8 +133,11 @@ pub export fn main() u8 {
 
     const rstr = RocStr.fromSlice("TEST_PYARG_STR");
     const arg = PyArg{
-        .function=rstr
+        .function=rstr,
+        // .args=11
+            
     };
+    
     defer {
         rstr.decref();
     }
@@ -145,12 +148,6 @@ pub export fn main() u8 {
 
     // Args just don't work in this setup. Postponing them ...
     // std.debug.print("There are {d} args:\n", .{std.os.argv.len});
-
-
-    // const arg = .{
-    //     .function=rstr,
-    //     .args=15
-    // };
 
     roc__mainForHost_1_exposed_generic(output, &arg);
 

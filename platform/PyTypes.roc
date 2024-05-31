@@ -6,6 +6,6 @@ PyInt : [ I32, I64 ]
 PyNum a : Num a
 
 PyArg : {
-    function: Str
+    function: Str,
     # args: I32
 }
