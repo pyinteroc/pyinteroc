@@ -131,7 +131,7 @@ pub export fn main() u8 {
     const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
     var output = @as([*]u8, @ptrCast(raw_output));
 
-    const rstr = RocStr.fromSlice("TEST_STR");
+    const rstr = RocStr.fromSlice("TEST_PYARG_STR");
     const arg = PyArg{
         .function=rstr
     };
