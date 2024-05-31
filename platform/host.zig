@@ -17,11 +17,11 @@ const mem = std.mem;
 const Allocator = mem.Allocator;
 
 const PyArg = extern struct {
-    function: RocStr,
-    args: i32
+    function: RocStr
+    // args: i32
 };
 
-extern fn roc__mainForHost_1_exposed_generic([*]u8, [*]const u8) void;
+extern fn roc__mainForHost_1_exposed_generic([*]u8, *const PyArg) void;
 extern fn roc__mainForHost_1_exposed_size() i64;
 extern fn roc__mainForHost_0_caller(*const u8, [*]u8, [*]u8) void;
 extern fn roc__mainForHost_0_size() i64;
@@ -132,6 +132,9 @@ pub export fn main() u8 {
     var output = @as([*]u8, @ptrCast(raw_output));
 
     const rstr = RocStr.fromSlice("TEST_STR");
+    const arg = PyArg{
+        .function=rstr
+    };
     defer {
         rstr.decref();
     }
@@ -149,7 +152,7 @@ pub export fn main() u8 {
     //     .args=15
     // };
 
-    roc__mainForHost_1_exposed_generic(output, rstr.asU8ptr());
+    roc__mainForHost_1_exposed_generic(output, &arg);
 
     call_the_closure(output);
 
