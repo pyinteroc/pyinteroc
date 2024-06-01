@@ -118,23 +118,30 @@ comptime {
 
 pub const singleton = struct {
     var pyResult: i32 = 0;
-    var pyArgs: [2][]const u8 = undefined;
+    var pyArgs: std.ArrayList(RocStr) = undefined;
 
     pub fn get_result() i32 {
         return pyResult;
     }
 
-    pub fn get_args() *[2][]const u8 {
+    pub fn get_args() *std.ArrayList(RocStr) {
         return &pyArgs;
     }
 
-    fn set_result(num:i32) void {
+    fn set_result(num: i32) void {
         pyResult = num;
     }
 
-    fn init_args() void {
-        pyArgs[0] = "First Str";
-        pyArgs[1] = "Second Str..";
+    fn init_args(allocator: std.mem.Allocator) void {
+        pyArgs = std.ArrayList(RocStr).init(allocator);
+    }
+
+    fn deinit_args() void {
+        pyArgs.deinit();
+    }
+
+    fn append_arg(arg: RocStr) !void {
+        try pyArgs.append(arg);
     }
 };
 
@@ -146,6 +153,10 @@ pub export fn main() u8 {
     const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
     var output = @as([*]u8, @ptrCast(raw_output));
 
+
+    singleton.init_args(allocator);
+    defer singleton.deinit_args();
+
     const rstr = RocStr.fromSlice("STR2");
     defer {
         rstr.decref();
@@ -155,7 +166,10 @@ pub export fn main() u8 {
         allocator.free(raw_output);
     }
 
-    singleton.init_args();
+
+    singleton.append_arg(RocStr.fromSlice("First Str")) catch {};
+    singleton.append_arg(RocStr.fromSlice("Second Str..")) catch {};
+
     roc__mainForHost_1_exposed_generic(output, rstr.asU8ptr());
 
     call_the_closure(output);
@@ -379,23 +393,10 @@ fn roc_fx_args() callconv(.C) RocList {
 }
 
 fn roc_fx_args_help() !RocList {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer _ = gpa.deinit();
-
-    // Get and print them!
-    var pyArgs = singleton.get_args();
+    var pyArgs = singleton.get_args().items;
     std.debug.print("There are {d} args:\n", .{pyArgs.len});
-    var roc_strs = std.ArrayList(RocStr).init(allocator);
 
-    defer roc_strs.deinit();
-
-    for (pyArgs) |arg| {
-        try roc_strs.append(RocStr.fromSlice(arg));
-        std.debug.print("  {s}\n", .{arg});
-    }
-
-    return RocList.fromSlice(RocStr, roc_strs.items);
+    return RocList.fromSlice(RocStr, pyArgs);
 }
 
 pub export fn roc_fx_setResult(n: i32) void {
