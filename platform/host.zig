@@ -143,6 +143,22 @@ pub const singleton = struct {
     fn append_arg(arg: RocStr) !void {
         try pyArgs.append(arg);
     }
+
+    fn append_c_strings(
+        c_strings: [*]const [*]const u8
+        , num: u32
+        // , allocator: *std.mem.Allocator
+    ) !void {
+        for (c_strings[0..num]) |c_str| {
+            var length: usize = 0;
+            while (c_str[length] != 0) : (length += 1) {}
+
+            // Create a slice from the C string up to its length
+            const slice = c_str[0..length];
+            const rocStr = RocStr.init(slice.ptr, slice.len);
+            try append_arg(rocStr);
+        }
+    }
 };
 
 pub export fn main() u8 {
@@ -152,23 +168,18 @@ pub export fn main() u8 {
     const size = @max(8, @as(usize, @intCast(roc__mainForHost_1_exposed_size())));
     const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
     var output = @as([*]u8, @ptrCast(raw_output));
-
+    defer allocator.free(raw_output);
+    
 
     singleton.init_args(allocator);
     defer singleton.deinit_args();
-
-    const rstr = RocStr.fromSlice("STR2");
-    defer {
-        rstr.decref();
-    }
-
-    defer {
-        allocator.free(raw_output);
-    }
-
+    
 
     singleton.append_arg(RocStr.fromSlice("First Str")) catch {};
     singleton.append_arg(RocStr.fromSlice("Second Str..")) catch {};
+
+    const rstr = RocStr.fromSlice("STR2");
+    defer rstr.decref();
 
     roc__mainForHost_1_exposed_generic(output, rstr.asU8ptr());
 
@@ -180,36 +191,39 @@ pub export fn main() u8 {
     return 0;
 }
 
-// defer RocList.decref(@sizeOf(RocStr));
+const CArgs = extern struct {
+    args: [*]const [*]const u8, // Pointer to an array of C strings
+    num: u32,                   // Number of arguments
+};
 
+pub export fn call_roc(c_args: *CArgs) i32 {
+    std.debug.print("REACHED!!\n",.{});
+    const allocator = std.heap.page_allocator;
 
-// const PyArgC = extern struct {
-//     fn_name: [*c]const u8,
-//     num:i32
-// };
+    // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes
+    const size = @max(8, @as(usize, @intCast(roc__mainForHost_1_exposed_size())));
+    const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
+    var output = @as([*]u8, @ptrCast(raw_output));
+    defer allocator.free(raw_output);
+    
 
-// pub export fn call_roc( arg: *PyArgC ) i32 {
-//     const allocator = std.heap.page_allocator;
+    singleton.init_args(allocator);
+    defer singleton.deinit_args();
 
-//     // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes
-//     const size = @max(8, @as(usize, @intCast(roc__mainForHost_1_exposed_size())));
-//     const raw_output = allocator.alignedAlloc(u8, @alignOf(u64), @as(usize, @intCast(size))) catch unreachable;
-//     var output = @as([*]u8, @ptrCast(raw_output));
+    
+    // Initialize arguments
+    singleton.append_c_strings(c_args.args, c_args.num) catch {};
 
-//     defer {
-//         allocator.free(raw_output);
-//     }
+    const roc_str = singleton.get_args().items[0];
+    defer roc_str.decref();
 
+    roc__mainForHost_1_exposed_generic(output, roc_str.asU8ptr());
 
-//     const stdout = std.io.getStdOut().writer();
-//     stdout.print("Calling FN: {s}\n", .{arg.fn_name}) catch unreachable;
+    call_the_closure(output);
 
-//     roc__mainForHost_1_exposed_generic(output, arg.num);
+    return singleton.get_result();
+}
 
-//     call_the_closure(output);
-
-//     return pyResult;
-// }
 
 fn call_the_closure(closure_data_pointer: [*]u8) void {
     const allocator = std.heap.page_allocator;

@@ -5,11 +5,10 @@ ffi = FFI()
 
 ffi.cdef("""
     typedef struct {
-        const char* fn_name;
-        int32_t num;
-    } PyArgC;
-    
-    int call_roc(PyArgC* arg);
+        char **args; // Pointer to an array of C strings
+        uint32_t num; // Number of arguments
+    } CArgs;
+    int call_roc(CArgs *c_args);
 """)
 
 
@@ -19,9 +18,9 @@ lib_path = pkg_resources.files("lib")\
 
 ### Calling the shared library function
 roc = ffi.dlopen(str(lib_path))
-py_arg = ffi.new(
-    "PyArgC *"
-    , {
-        'fn_name': ffi.new("char[]", b"function_name")
-        , 'num': 10
-    })
+
+# Prepare the arguments
+args = [ffi.new("char[]", b"STR1"), ffi.new("char[]", b"Second argument"), ffi.NULL]
+
+# Create an instance of CArgs
+c_args = ffi.new("CArgs *", {"args": ffi.new("char *[]", args), "num": 2})
