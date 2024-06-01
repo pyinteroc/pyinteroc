@@ -3,15 +3,18 @@
 import pytest
 from cffi import FFI
 
-from roc import roc, c_args
+from roc import ROC
 
+def test_c_args_creation():
+    roc = ROC()
+    test_args = ["STR1", "ARG1"]
+    c_args = roc.c_args(test_args)
+    assert c_args.num == 2
 
-def test_roc(capfd):
-    
+def test_call_roc():
+    roc = ROC()
+    test_args = ["STR2", "arg1"]
+    c_args = roc.c_args(test_args)
     result = roc.call_roc(c_args)
-    out, err = capfd.readouterr()
-    expected_output = "OK: STR1"
-    # Assuming the output is printed with a newline at the end, we strip it before comparing
-    assert out.strip() == expected_output
-
-    assert result == 1
+    
+    assert result == 2

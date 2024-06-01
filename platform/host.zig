@@ -207,11 +207,10 @@ pub export fn call_roc(c_args: *CArgs) i32 {
     defer allocator.free(raw_output);
     
 
+    // Initialize arguments
     singleton.init_args(allocator);
     defer singleton.deinit_args();
-
     
-    // Initialize arguments
     singleton.append_c_strings(c_args.args, c_args.num) catch {};
 
     const roc_str = singleton.get_args().items[0];
