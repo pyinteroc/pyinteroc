@@ -116,7 +116,27 @@ comptime {
     @export(roc_fx_args, .{ .name="roc_fx_args", .linkage = .Strong,  });
 }
 
-const Unit = extern struct {};
+pub const singleton = struct {
+    var pyResult: i32 = 0;
+    var pyArgs: [2][]const u8 = undefined;
+
+    pub fn get_result() i32 {
+        return pyResult;
+    }
+
+    pub fn get_args() *[2][]const u8 {
+        return &pyArgs;
+    }
+
+    fn set_result(num:i32) void {
+        pyResult = num;
+    }
+
+    fn init_args() void {
+        pyArgs[0] = "First Str";
+        pyArgs[1] = "Second Str..";
+    }
+};
 
 pub export fn main() u8 {
     const allocator = std.heap.page_allocator;
@@ -135,16 +155,16 @@ pub export fn main() u8 {
         allocator.free(raw_output);
     }
 
+    singleton.init_args();
     roc__mainForHost_1_exposed_generic(output, rstr.asU8ptr());
 
     call_the_closure(output);
+    
+
+    std.debug.print("result is {d}\n", .{singleton.get_result()});
 
     return 0;
 }
-
-
-var pyResult: i32 = 0;
-var pyArgs = [_][]const u8{"First Str", "Second Str.."};
 
 // defer RocList.decref(@sizeOf(RocStr));
 
@@ -364,6 +384,7 @@ fn roc_fx_args_help() !RocList {
     defer _ = gpa.deinit();
 
     // Get and print them!
+    var pyArgs = singleton.get_args();
     std.debug.print("There are {d} args:\n", .{pyArgs.len});
     var roc_strs = std.ArrayList(RocStr).init(allocator);
 
@@ -378,5 +399,5 @@ fn roc_fx_args_help() !RocList {
 }
 
 pub export fn roc_fx_setResult(n: i32) void {
-    pyResult = n;
+    singleton.set_result(n);
 }
