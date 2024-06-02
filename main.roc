@@ -19,16 +19,16 @@ run1 = \args ->
     fst = List.get args 0
     when fst is
         Ok s -> 
-            Stdout.line! "OK: $(s)"
+            Stdout.line! "Selected the first function with arg: $(s)"
             Py.setresult! 1
 
         _ -> Stderr.line! "Error"
 
 run2 = \args ->
-    snd = List.get args 1
+    snd = List.get args 0
     when snd is
         Ok s -> 
-            Stdout.line! "OK: $(s)"
+            Stdout.line! "Selected the second function with arg: $(s)"
             Py.setresult! 2
 
         _ -> Stderr.line! "Error"
