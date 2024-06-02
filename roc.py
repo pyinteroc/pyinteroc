@@ -4,6 +4,20 @@ from cffi import FFI
 import importlib.resources as pkg_resources
 from typing import List
 
+def roc_fn():
+    """
+    Decorator to convert a Python function into a ROC function.
+    """
+    roc = ROC()
+    def decorator(fn):
+        def wrapper(*args, **kwargs):
+            str_args = [fn.__name__] + [str(arg) for arg in args]
+            c_args = roc.c_args(string_list= str_args)
+            result = roc.call_roc(c_args)
+            return result
+        return wrapper
+    return decorator
+
 class ROC:
     def __init__(self):
         self.ffi: FFI = FFI()
@@ -19,16 +33,6 @@ class ROC:
         lib_path = pkg_resources.files("lib").joinpath("libhost.so")
         self.roc = self.ffi.dlopen(str(lib_path))
     
-    def roc_fn(self):
-        def decorator(fn):
-            def wrapper(*args, **kwargs):
-                str_args = [fn.__name__] + [str(arg) for arg in args]
-                c_args = self.c_args(string_list= str_args)
-                result = self.call_roc(c_args)
-                return result
-            return wrapper
-        return decorator
-
     def c_args(self, string_list: List[str]) -> object:
         # Prepare the arguments
         args = [

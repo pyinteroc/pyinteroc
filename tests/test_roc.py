@@ -3,7 +3,7 @@
 import pytest
 from cffi import FFI
 
-from roc import ROC
+from roc import ROC, roc_fn
 
 def test_c_args_creation():
     roc = ROC()
@@ -22,7 +22,7 @@ def test_call_roc():
 def test_roc_fn_decorator():
     roc = ROC()
     
-    @roc.roc_fn()
+    @roc_fn()
     def sum_in_roc(a: int, b: int, c: int) -> int:
         raise NotImplementedError  ### This should never reach here
 
