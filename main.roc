@@ -30,3 +30,5 @@ run2 = \args ->
             Py.setresult! 2
 
         _ -> Stderr.line! "Error"
+
+expect 1==1 ### need at least one test

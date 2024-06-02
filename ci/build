@@ -20,8 +20,6 @@ build_all() {
     build_zig
 }
 
-echo "ARG IS: $1"
-
 case "$1" in
     roc)
         build_roc

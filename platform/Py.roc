@@ -2,7 +2,7 @@ interface Py
     exposes [
         setresult,
     ]
-    imports [Effect, InternalTask, Task.{ Task }, PyTypes.{ PyNum }]
+    imports [Effect, InternalTask, Task.{ Task }]
 
 ### Stores the result to be returned to python
 setresult : I32 -> Task {} *

@@ -1,22 +1,46 @@
 #!/usr/bin/env bash
 
-# Find all .py, .zig, and .roc files, excluding lib, bin directories and hidden files
-find . -type f \( -iname "*.py" -o -iname "*.zig" -o -iname "*.roc" \) \
-  | grep -vE "/(\.git|lib|bin)/" \
-  | entr -cd -s '
-    echo "Detected changes in /_"
-    case "/_" in
+# Function to handle file changes
+handle_change() {
+    local filepath="$1"
+    echo "Detected changes in $filepath"
+    case "$filepath" in
       *.roc)
         echo "Running test for ROC files"
-        test roc
+        runtest roc
         ;;
       *.zig)
         echo "Running build for Zig files"
-        build
+        build # testing zig is not working at the moment
         ;;
       *.py)
         echo "Running test for Python files"
-        test python
+        runtest python
         ;;
     esac
-'
+}
+
+
+# Last file processed
+last_file=""
+last_time=0
+
+# Debounce delay in seconds
+debounce_delay=3
+
+# Watch for changes
+inotifywait -mr -e modify --include '\.(roc|zig|py)$' --format '%w%f' "." \
+| while read filepath; do
+    # echo "File changed $filepath"
+
+    current_time=$(date +%s)
+    
+    # Check if the file matches the exclude pattern and debounce check
+    if [[ "$filepath" != "$last_file" \
+    || $((current_time - last_time)) -ge $debounce_delay ]]; then
+        last_file="$filepath"
+        last_time=$current_time
+        handle_change "$filepath"
+    fi
+
+done

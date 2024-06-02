@@ -14,7 +14,7 @@
 
       packageSet = with pkgs; {
         inherit curl;
-        inherit entr;
+        inherit inotify-tools;
 
         inherit zig;
         roc = rocPkgs.cli;
@@ -26,10 +26,10 @@
           writeShellScriptBin "publish" ./ci/push_to_public_repos ;
           
         build = 
-          writeShellScriptBin "build" ./ci/build ;
+          writeShellScriptBin "build" "./ci/build $1" ;
           
-        test = 
-          writeShellScriptBin "test" ./ci/test ;
+        runtest = 
+          writeShellScriptBin "runtest" "./ci/test $1" ;
         
         loop = 
           writeShellScriptBin "loop" ./ci/start_test_loop ;
@@ -38,12 +38,12 @@
     in rec {
       defaultShell = pkgs.mkShell {
         buildInputs = with packageSet; [
-          entr
+          inotify-tools
           curl
           deployRocNightly
           publish
           build
-          test
+          runtest
           loop
         ];
         shellHook = ''
