@@ -197,7 +197,6 @@ const CArgs = extern struct {
 };
 
 pub export fn call_roc(c_args: *CArgs) i32 {
-    std.debug.print("REACHED!!\n",.{});
     const allocator = std.heap.page_allocator;
 
     // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes

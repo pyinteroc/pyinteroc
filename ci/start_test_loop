@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Find all .py, .zig, and .roc files, excluding lib, bin directories and hidden files
+find . -type f \( -iname "*.py" -o -iname "*.zig" -o -iname "*.roc" \) \
+  | grep -vE "/(\.git|lib|bin)/" \
+  | entr -cd -s '
+    echo "Detected changes in /_"
+    case "/_" in
+      *.roc)
+        echo "Running test for ROC files"
+        test roc
+        ;;
+      *.zig)
+        echo "Running build for Zig files"
+        build
+        ;;
+      *.py)
+        echo "Running test for Python files"
+        test python
+        ;;
+    esac
+'

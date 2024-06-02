@@ -25,8 +25,14 @@
         publish = 
           writeShellScriptBin "publish" ./ci/push_to_public_repos ;
           
-        buildAll = 
-          writeShellScriptBin "build" ./ci/build_all ;
+        build = 
+          writeShellScriptBin "build" ./ci/build ;
+          
+        test = 
+          writeShellScriptBin "test" ./ci/test ;
+        
+        loop = 
+          writeShellScriptBin "loop" ./ci/start_test_loop ;
       };
 
     in rec {
@@ -36,7 +42,9 @@
           curl
           deployRocNightly
           publish
-          buildAll
+          build
+          test
+          loop
         ];
         shellHook = ''
           alias roc="./roc"

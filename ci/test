@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -e
+
+test_roc() {
+    ./roc test
+}
+
+test_python() {
+    poetry run pytest
+}
+
+test_all() {
+    test_roc
+    build roc
+    
+    test_python
+}
+
+case "$1" in
+    roc)
+        test_roc
+        ;;
+    python)
+        test_python
+        ;;
+    *)
+        test_all
+        ;;
+esac
