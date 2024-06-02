@@ -16,7 +16,7 @@ const maxInt = std.math.maxInt;
 const mem = std.mem;
 const Allocator = mem.Allocator;
 
-extern fn roc__mainForHost_1_exposed_generic([*]u8, [*]const u8) void;
+extern fn roc__mainForHost_1_exposed_generic([*]u8) void;
 extern fn roc__mainForHost_1_exposed_size() i64;
 extern fn roc__mainForHost_0_caller(*const u8, [*]u8, [*]u8) void;
 extern fn roc__mainForHost_0_size() i64;
@@ -178,10 +178,7 @@ pub export fn main() u8 {
     singleton.append_arg(RocStr.fromSlice("First Str")) catch {};
     singleton.append_arg(RocStr.fromSlice("Second Str..")) catch {};
 
-    const rstr = RocStr.fromSlice("STR2");
-    defer rstr.decref();
-
-    roc__mainForHost_1_exposed_generic(output, rstr.asU8ptr());
+    roc__mainForHost_1_exposed_generic(output);
 
     call_the_closure(output);
     
@@ -212,10 +209,7 @@ pub export fn call_roc(c_args: *CArgs) i32 {
     
     singleton.append_c_strings(c_args.args, c_args.num) catch {};
 
-    const roc_str = singleton.get_args().items[0];
-    defer roc_str.decref();
-
-    roc__mainForHost_1_exposed_generic(output, roc_str.asU8ptr());
+    roc__mainForHost_1_exposed_generic(output);
 
     call_the_closure(output);
 
