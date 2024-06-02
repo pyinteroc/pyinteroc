@@ -18,3 +18,14 @@ def test_call_roc():
     result = roc.call_roc(c_args)
     
     assert result == 2
+
+def test_roc_fn_decorator():
+    roc = ROC()
+    
+    @roc.roc_fn()
+    def sum_in_roc(a: int, b: int, c: int) -> int:
+        raise NotImplementedError  ### This should never reach here
+
+    assert sum_in_roc(1, 2, 3) == 6
+    assert sum_in_roc(1, 2, 3, 4, 89) == 99
+    assert sum_in_roc(1, 2, 3, 98, 150) == 254

@@ -5,7 +5,7 @@ import importlib.resources as pkg_resources
 from typing import List
 
 class ROC:
-    def __init__(self) -> None:
+    def __init__(self):
         self.ffi: FFI = FFI()
         self.ffi.cdef("""
             typedef struct {
@@ -18,12 +18,31 @@ class ROC:
         # Loading the shared library
         lib_path = pkg_resources.files("lib").joinpath("libhost.so")
         self.roc = self.ffi.dlopen(str(lib_path))
+    
+    def roc_fn(self):
+        def decorator(fn):
+            def wrapper(*args, **kwargs):
+                str_args = [fn.__name__] + [str(arg) for arg in args]
+                c_args = self.c_args(string_list= str_args)
+                result = self.call_roc(c_args)
+                return result
+            return wrapper
+        return decorator
 
     def c_args(self, string_list: List[str]) -> object:
         # Prepare the arguments
-        args = [self.ffi.new("char[]", arg.encode()) for arg in string_list] + [self.ffi.NULL]
+        args = [
+            self.ffi.new("char[]", arg.encode()) \
+            for arg in string_list] \
+            + [self.ffi.NULL]
+
         # Create an instance of CArgs
-        c_args = self.ffi.new("CArgs *", {"args": self.ffi.new("char *[]", args), "num": len(string_list)})
+        c_args = self.ffi.new(
+            "CArgs *"
+            , {"args": self.ffi.new("char *[]", args)
+            , "num": len(string_list)}
+        )
+        
         return c_args
 
     def call_roc(self, c_args: object) -> int:
