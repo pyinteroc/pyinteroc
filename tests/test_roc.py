@@ -20,7 +20,6 @@ def test_call_roc():
     assert result == 2
 
 def test_roc_fn_decorator():
-    roc = ROC()
     
     @roc_fn()
     def sum_in_roc(a: int, b: int, c: int) -> int:
