@@ -24,7 +24,7 @@ run1 = \args ->
     when fst is
         Ok s -> 
             Stdout.line! "Selected the first function with arg: $(s)"
-            Py.setresult! 1
+            Py.setResult! 1
 
         _ -> Stderr.line! "Error"
 
@@ -33,12 +33,12 @@ run2 = \args ->
     when snd is
         Ok s -> 
             Stdout.line! "Selected the second function with arg: $(s)"
-            Py.setresult! 2
+            Py.setResult! 2
 
         _ -> Stderr.line! "Error"
 
 ### Note this function actually performs effects
-runSumInROC = \args -> Py.setresult (sumInROC args)
+runSumInROC = \args -> Py.setResult (sumInROC args)
 
 sumInROC = \args ->
     nums = List.map args numFromStr

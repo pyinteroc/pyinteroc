@@ -1,12 +1,12 @@
 interface Py
     exposes [
-        setresult,
+        setResult,
     ]
     imports [Effect, InternalTask, Task.{ Task }]
 
 ### Stores the result to be returned to python
-setresult : I32 -> Task {} *
-setresult = 
+setResult : I32 -> Task {} *
+setResult = 
     \n ->
         Effect.setResult n
                 |> Effect.map Ok
